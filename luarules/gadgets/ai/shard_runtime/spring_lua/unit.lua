@@ -158,8 +158,14 @@ function ShardUnit:CanBuildWhenNotDeployed()
 	return false
 end
 
+
+
 function ShardUnit:Stop()
 	return Spring.GiveOrderToUnit( self.id, CMD.STOP, {}, 0 )
+end
+
+function ShardUnit:Wait()
+	return Spring.GiveOrderToUnit( self.id, CMD.WAIT, {}, 0 )
 end
 
 function ShardUnit:Stockpile()
