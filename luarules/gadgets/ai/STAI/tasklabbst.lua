@@ -261,15 +261,24 @@ function TaskLabBST:preFilter()
  	local threshold = 1 - (techLv / self.ai.maxFactoryLevel)+0.05
 -- 	local threshold = (0.4-(techLv / 10))+0.05 --TODO this is a shit
 	self:EchoDebug('prefilter threshold', threshold)
-	if self.ai.Energy.full > 0.05 and self.ai.Metal.full > threshold then
-		return true
+	local topCmd = Spring.GetFactoryCommands(self.id,1)[1]
+	if topCmd then
+		if self.ai.Energy.full > 0.05 and self.ai.Metal.full > threshold then
+			if topCmd.id == CMD.WAIT then
+				self.unit:Internal():Wait()
+			end
+		else
+			if topCmd.id ~= CMD.WAIT then
+				self.unit:Internal():Wait()
+			end
+		end
 	end
 end
 
 function TaskLabBST:Update()
 	local f = self.game:Frame()
 	if f % 111 == 0 then
-		if not self:preFilter() then return end
+		self:preFilter()
 		self:GetAmpOrGroundWeapon()
 		self.isBuilding = self.game:GetUnitIsBuilding(self.id)--TODO better this?
 		if Spring.GetFactoryCommands(self.id,0) > 1 then return end
