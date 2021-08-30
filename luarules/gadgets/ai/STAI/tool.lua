@@ -641,3 +641,27 @@ function Tool:serialize (o, keylist,reset)
 	end
 	return output
 end
+
+function Tool:UnitNameSanity(unitOrName)
+	if not unitOrName then
+		self.game:Warn('nil unit or name')
+		return
+	end
+	if type(unitOrName) == 'string' then
+		if not self.ai.armyhst.unitTable[unitOrName] then
+			self.game:Warn('invalid string name')
+			return
+		else
+			return unitOrName
+		end
+	else
+		local uName = unitOrName:Name()
+		if uName ~= nil  and self.ai.armyhst.unitTable[uName]then
+			return uName
+		else
+			self.game:Warn('invalid object unit give invalid name')
+			return
+		end
+	end
+	self.game:Warn('unknow reason to exit from unit name sanity')
+end

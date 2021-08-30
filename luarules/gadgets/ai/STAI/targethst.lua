@@ -8,7 +8,7 @@ function TargetHST:internalName()
 	return "targethst"
 end
 
-local DebugDrawEnabled = false
+local DebugDrawEnabled = true
 
 local mFloor = math.floor
 local mCeil = math.ceil
@@ -30,13 +30,13 @@ local cellElmos = 256
 local cellElmosHalf = cellElmos / 2
 local threatTypes = { "ground", "air", "submerged" }
 local threatTypesAsKeys = { ground = true, air = true, submerged = true }
-local baseUnitThreat = 0 -- 150
-local baseUnitRange = 0 -- 250
+local baseUnitThreat = 0--100 -- 150
+local baseUnitRange = 0--200 -- 250
 local unseenMetalGeoValue = 50
 local baseBuildingValue = 150
 local bomberExplosionValue = 2000
 local vulnerableHealth = 400
-local wreckMult = 100
+local wreckMult = 10
 local vulnerableReclaimDistMod = 100
 local badCellThreat = 300
 local attackDistMult = 0.5 -- between 0 and 1, the lower number, the less self.ai.tool:distance matters
@@ -435,7 +435,11 @@ function TargetHST:UpdateEnemies()
 			local cell = self.cells[px][pz]
 			if los == 1 then
 				if ut.isBuilding then
-					cell.value = cell.value + baseBuildingValue
+-- 					if ut.isWeapon then
+-- 						cell.value = cell.value - baseBuildingValue
+-- 					else
+						cell.value = cell.value + baseBuildingValue
+-- 					end
 				else
 					-- if it moves, assume it's out to get you
 					self:FillCircle(px, pz, baseUnitRange, "threat", "ground", baseUnitThreat)
@@ -567,42 +571,6 @@ function TargetHST:UpdateBadPositions()
 	end
 end
 
-function TargetHST:UpdateWrecks()
-	-- figure out where all the wrecks are
-	for id, w in pairs(self.ai.knownWrecks) do
-		-- will need to check if reclaimer can get to wreck later
-		local pos = w.position
-		local cell = self:GetOrCreateCellHere(pos)
-		local wname = w.featureName
-		local ftable = self.ai.armyhst.featureTable[wname]
-		if ftable ~= nil then
-			cell.metal = cell.metal + ftable.metal
-			cell.energy = cell.energy + ftable.energy
-			local unitName = ftable.unitName
-			if unitName ~= nil then
-				w.unitName = unitName
-				local rut = self.ai.armyhst.unitTable[unitName]
-				if not self.ai.armyhst.commanderList[unitName] and rut.speed > 0 and rut.metalCost < 2000 then
-					table.insert(cell.resurrectables, w)
-				end
-			end
-			if ftable.metal > 0 then
-				table.insert(cell.reclaimables, w)
-			end
-		else
-			for findString, metalValue in pairs(self.ai.armyhst.baseFeatureMetal) do
-				if string.find(wname, findString, nil, true) then
-					cell.metal = cell.metal + metalValue
-					break
-				end
-			end
-			if metalValue > 0 then
-				table.insert(cell.reclaimables, w)
-			end
-		end
-	end
-end
-
 function TargetHST:UpdateFronts(number)
 	local highestCells = {}
 	local highestResponses = {}
@@ -640,8 +608,9 @@ end
 
 function TargetHST:UpdateDebug()
 	if DebugDrawEnabled then
-		map:EraseRectangle(nil, nil, nil, nil, true, 8)
-		map:EraseRectangle(nil, nil, nil, nil, false, 8)
+		self.map:EraseAll(8)
+-- 		map:EraseRectangle(nil, nil, nil, nil, true, 8)
+-- 		map:EraseRectangle(nil, nil, nil, nil, false, 8)
 		local maxThreat = 0
 		local maxValue = 0
 		for cx, czz in pairs(self.cells) do
@@ -741,7 +710,7 @@ function TargetHST:UpdateMap()
 		self:UpdateEnemies()
 		self:UpdateDangers()
 		self:UpdateBadPositions()
-		self:UpdateWrecks()
+-- 		self:UpdateWrecks()
 		self:UpdateDamagedUnits()
 		-- self:UpdateMetalGeoSpots()
 		self:UpdateFronts(3)
@@ -781,17 +750,9 @@ function TargetHST:NearbyVulnerable(unit)
 		end
 	end
 	-- check adjacent self.cells
-	if vulnerable == nil then
-		for ix = px - 1, px + 1 do
-			for iz = pz - 1, pz + 1 do
-				if self.cells[ix] ~= nil then
-					if self.cells[ix][iz] ~= nil then
-						vulnerable = CellVulnerable(self.cells[ix][iz], gas, weapons)
-						if vulnerable then break end
-					end
-				end
-			end
-			if vulnerable then break end
+	if not vulnerable then
+		for cx , cz in pairs(self:adiaCells(px,pz,'raiderAdjacent')) do
+			vulnerable = CellVulnerable(self.cells[cx][cz], gas, weapons)
 		end
 	end
 	return vulnerable
@@ -818,32 +779,32 @@ function TargetHST:GetBestRaidCell(representative)
 	local cells
 	local minThreat = math.huge
 
- 	for i,cell in pairs (self.cellList) do
- 		local value, threat, gas = self:CellValueThreat(rname, cell)
- 		local dist = self.ai.tool:Distance(rpos, cell.pos)
- 		if value > 0 and threat < minThreat  and self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
- 			minThreat = threat
- 			best = cell
---  			map:DrawCircle(best.pos, 100, {255,0,0,255}, 'raid', true, 3)
- 		end
- 	end
---  	for i, cell in pairs(self.cellList) do
+--  	for i,cell in pairs (self.cellList) do
 --  		local value, threat, gas = self:CellValueThreat(rname, cell)
---  		-- cells with other raiders in or nearby are better places to go for raiders
---  		if cell.raiderHere then threat = threat - cell.raiderHere end
---  		if cell.raiderAdjacent then threat = threat - cell.raiderAdjacent end
---  		threat = threat - threatReduction
---  		if value > 0 and threat <= maxThreat then
---  			if self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
---  				local mod = value - (threat * 3)
---  				local dist = self.ai.tool:Distance(rpos, cell.pos) - mod
---  				if dist < bestDist then
---  					best = cell
---  					bestDist = dist
---  				end
---  			end
+--  		local dist = self.ai.tool:Distance(rpos, cell.pos)
+--  		if value > 0 and threat < minThreat  and self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
+--  			minThreat = threat
+--  			best = cell
+-- --  			map:DrawCircle(best.pos, 100, {255,0,0,255}, 'raid', true, 3)
 --  		end
 --  	end
+  	for i, cell in pairs(self.cellList) do
+  		local value, threat, gas = self:CellValueThreat(rname, cell)
+  		-- cells with other raiders in or nearby are better places to go for raiders
+  		if cell.raiderHere then threat = threat - cell.raiderHere end
+  		if cell.raiderAdjacent then threat = threat - cell.raiderAdjacent end
+  		threat = threat - threatReduction
+  		if value > 0 and threat <= maxThreat then
+  			if self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
+ 				local mod = value - (threat * 3)
+  				local dist = self.ai.tool:Distance(rpos, cell.pos) - mod
+  				if dist < bestDist then
+  					best = cell
+  					bestDist = dist
+  				end
+  			end
+  		end
+  	end
 
 	return best
 end
@@ -1078,144 +1039,6 @@ function TargetHST:GetBestBomberTarget(torpedo)
 	end
 end
 
-function TargetHST:GetBestReclaimCell(representative, lookForEnergy)
-	self:UpdateMap()
-	local rpos = representative:GetPosition()
-	local rname = representative:Name()
-	local best
-	local bestDist = 99999
-	local bestVulnerable
-	for i, cell in pairs(self.cellList) do
-		local value, threat, gas = self:CellValueThreat(rname, cell)
-		if threat == 0 and cell.pos then
-			local canGo = self.ai.maphst:UnitCanGoHere(representative, cell.pos)
-			if not canGo then
-				self:EchoDebug("can't get to reclaim cell, trying nearby")
-				-- check nearby positions, because sometimes the commander is underwater in a crater but can still be reclaimed
-				for angle = halfPi, twicePi, halfPi do
-					local nearPos = self.ai.tool:RandomAway( cell.pos, 110, nil, angle)
-					canGo = self.ai.maphst:UnitCanGoHere(representative, nearPos)
-					if canGo then
-						self:EchoDebug("found accessible position near reclaim cell")
-						break
-					end
-				end
-			end
-			if canGo then
-				local mod = 0
-				if #cell.reclaimables > 0 then
-					if lookForEnergy then
-						mod = cell.energy
-					else
-						mod = cell.metal
-					end
-				end
-				local vulnerable = CellVulnerable(cell, gas, representative.canReclaimGAS)
-				if vulnerable then mod = mod + vulnerableReclaimDistMod end
-				if mod > 0 then
-					local dist = self.ai.tool:Distance(rpos, cell.pos) - (mod * reclaimModMult)
-					if dist < bestDist then
-						best = cell
-						bestDist = dist
-						bestVulnerable = vulnerable
-					end
-				end
-			end
-		end
-	end
-	return best, bestVulnerable
-end
-
-function TargetHST:WreckToResurrect(representative, alsoDamagedUnits)
-	if not representative then return end
-	self:UpdateMap()
-	local rpos = representative:GetPosition()
-	local rname = representative:Name()
-	local best
-	local bestDist = 99999
-	for i, cell in pairs(self.cellList) do
-		if #cell.resurrectables ~= 0 or (alsoDamagedUnits and cell.damagedUnits and #cell.damagedUnits > 0) then
-			local value, threat, gas = self:CellValueThreat(rname, cell)
-			if threat == 0 and cell.pos then
-				if self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
-					local dist = self.ai.tool:Distance(rpos, cell.pos)
-					if dist < bestDist then
-						best = cell
-						bestDist = dist
-					end
-				end
-			end
-		end
-	end
-	if best then
-		self:EchoDebug("got wreck to resurrect")
-		if alsoDamagedUnits and best.damagedUnits and #best.damagedUnits > 0 then
-			local bestUnit
-			local bestHealth
-			local damaged = best.damagedUnits
-			for i = 1, #damaged do
-				local engUnit = damaged[i]
-				local health = engUnit:GetHealth() / engUnit:GetMaxHealth()
-				if not bestHealth or health < bestHealth then
-					bestHealth = health
-					bestUnit = engUnit
-				end
-			end
-			if bestUnit then
-				return bestUnit, best
-			end
-		end
-		local bestWreck
-		local bestMetalCost = 0
-		for i, w in pairs(best.resurrectables) do
-			if w ~= nil then
-				local wname = w.featureName
-				if wname ~= nil then
-					local ft = self.ai.armyhst.featureTable[wname]
-					if ft ~= nil then
-						local ut = self.ai.armyhst.unitTable[ft.unitName]
-						if ut ~= nil then
-							local metalCost = ut.metalCost
-							if metalCost > bestMetalCost then
-								bestWreck = w
-								bestMetalCost = metalCost
-							end
-						end
-					end
-				end
-			end
-		end
-		return bestWreck, best
-	else
-		return nil, self:NearestVulnerableCell(representative)
-	end
-end
-
-function TargetHST:NearestVulnerableCell(representative)
-	if representative == nil then return end
-	self:UpdateMap()
-	local rpos = representative:GetPosition()
-	local rname = representative:Name()
-	local best
-	local bestDist = 99999
-	local weapons = self.ai.tool:UnitWeaponLayerList(rname)
-	for i, cell in pairs(self.cellList) do
-		local value, threat, gas = self:CellValueThreat(rname, cell)
-		if threat == 0 and cell.pos then
-			if self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
-				if CellVulnerable(cell, gas, weapons) ~= nil then
-					local dist = self.ai.tool:Distance(rpos, cell.pos)
-					if dist < bestDist then
-						best = cell
-						bestDist = dist
-					end
-				end
-			end
-		end
-	end
-	return best
-end
-
 function TargetHST:IsBombardPosition(position, unitName)
 	self:UpdateMap()
 	local px, pz = GetCellPosition(position)
@@ -1230,20 +1053,8 @@ end
 
 function TargetHST:ValueHere(position, unitOrName)
 	self:UpdateMap()
-	if unitOrName == nil then
-		game:SendToConsole("nil unit or name given to ThreatHere")
-		return
-	end
-	local uname
-	if type(unitOrName) == 'string' then
-		uname = unitOrName
-	else
-		uname = unitOrName:Name()
-	end
-	if uname == nil then
-		game:SendToConsole("nil unit name give nto ThreatHere")
-		return
-	end
+	local uname = self.ai.tool:UnitNameSanity(unitOrName)
+	if not uname then return end
 	local cell, px, pz = self:GetCellHere(position)
 	if cell == nil then return 0, nil, uname end
 	local value, _ = self:CellValueThreat(uname, cell)
@@ -1252,36 +1063,16 @@ end
 
 function TargetHST:ThreatHere(position, unitOrName, adjacent)
 	self:UpdateMap()
-	if unitOrName == nil then
-		game:SendToConsole("nil unit or name given to ThreatHere")
-		return
-	end
-	local uname
-	if type(unitOrName) == 'string' then
-		uname = unitOrName
-	else
-		uname = unitOrName:Name()
-	end
-	if uname == nil then
-		game:SendToConsole("nil unit name give nto ThreatHere")
-		return
-	end
+	local uname = self.ai.tool:UnitNameSanity(unitOrName)
+	if not uname then return end
 	local cell, px, pz = self:GetCellHere(position)
 	if cell == nil then return 0, nil, uname end
 	local value, threat = self:CellValueThreat(uname, cell)
+
 	if adjacent then
-		for cx = px-1, px+1 do
-			if self.cells[cx] then
-				for cz = pz-1, pz+1 do
-					if not (cx == px and cz == pz) then
-						local c = self.cells[cx][cz]
-						if c then
-							local cvalue, cthreat = self:CellValueThreat(uname, c)
-							threat = threat + cthreat
-						end
-					end
-				end
-			end
+		for cx , cz in pairs(self:adiaCells(px,pz,'raiderAdjacent')) do
+			local cvalue, cthreat = self:CellValueThreat(uname, self.cells[cx][cz])
+			threat = threat + cthreat
 		end
 	end
 	return threat, cell, uname
@@ -1417,46 +1208,224 @@ function TargetHST:RaiderHere(raidbehaviour)
 		inCell.raiderHere = inCell.raiderHere + (uthreat * 0.67)
 	end
 	local adjacentThreatReduction = uthreat * 0.33
+	for cx , cz in pairs(self:adiaCells(px,pz,'raiderAdjacent')) do
+		self.cells[cx][cz].raiderAdjacent  = self.cells[cx][cz].raiderAdjacent + adjacentThreatReduction
+	end
+	self.raiderCounted[raidbehaviour.id] = true -- reset with UpdateMap()
+end
+
+function TargetHST:adiaCells(px,pz,field)
+	local adiacents = {}
 	for x = px - 1, px + 1 do
 		if self.cells[x] ~= nil then
 			for z = pz - 1, pz + 1 do
-				if x == px and z == pz then
-					-- ignore center cell
-				else
-					local cell = self.cells[x][z]
-					if cell ~= nil then
-						if cell.raiderAdjacent == nil then cell.raiderAdjacent = 0 end
-						cell.raiderAdjacent = cell.raiderAdjacent + adjacentThreatReduction
+				if self.cells[x][z] and not(x == px and z == pz) then
+					adiacents[x] = z
+					if field and not self.cells[x][z][field] then
+						self.cells[x][z][field] = 0
 					end
 				end
 			end
 		end
 	end
-	self.raiderCounted[raidbehaviour.id] = true -- reset with UpdateMap()
+	return adiacents
 end
 
+-- function TargetHST:NearestVulnerableCell(representative)
+-- 	if representative == nil then return end
+-- 	self:UpdateMap()
+-- 	local rpos = representative:GetPosition()
+-- 	local rname = representative:Name()
+-- 	local best
+-- 	local bestDist = 99999
+-- 	local weapons = self.ai.tool:UnitWeaponLayerList(rname)
+-- 	for i, cell in pairs(self.cellList) do
+-- 		local value, threat, gas = self:CellValueThreat(rname, cell)
+-- 		if threat == 0 and cell.pos then
+-- 			if self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
+-- 				if CellVulnerable(cell, gas, weapons) ~= nil then
+-- 					local dist = self.ai.tool:Distance(rpos, cell.pos)
+-- 					if dist < bestDist then
+-- 						best = cell
+-- 						bestDist = dist
+-- 					end
+-- 				end
+-- 			end
+-- 		end
+-- 	end
+-- 	return best
+-- end
+
 -- so that reclaimers don't try to reclaim a cell with nothing in it
-function TargetHST:RemoveFeature(feature, position)
-	local px, pz = GetCellPosition(position)
-	local cell
-	if self.cells[px] then
-		cell = self.cells[px][pz]
-	end
-	if not cell then
-		return
-	end
-	for i = #cell.reclaimables, 1, -1 do
-		local recFeature = cell.reclaimables[i].feature
-		if recFeature == feature then
-			table.remove(cell.reclaimables, i)
-			return true
-		end
-	end
-	for i = #cell.resurrectables, 1, -1 do
-		local resFeature = cell.resurrectables[i].feature
-		if resFeature == feature then
-			table.remove(cell.resurrectables, i)
-			return true
-		end
-	end
-end
+-- function TargetHST:RemoveFeature(feature, position)
+-- 	local px, pz = GetCellPosition(position)
+-- 	local cell
+-- 	if self.cells[px] then
+-- 		cell = self.cells[px][pz]
+-- 	end
+-- 	if not cell then
+-- 		return
+-- 	end
+-- 	for i = #cell.reclaimables, 1, -1 do
+-- 		local recFeature = cell.reclaimables[i].feature
+-- 		if recFeature == feature then
+-- 			table.remove(cell.reclaimables, i)
+-- 			return true
+-- 		end
+-- 	end
+-- 	for i = #cell.resurrectables, 1, -1 do
+-- 		local resFeature = cell.resurrectables[i].feature
+-- 		if resFeature == feature then
+-- 			table.remove(cell.resurrectables, i)
+-- 			return true
+-- 		end
+-- 	end
+-- end
+
+-- function TargetHST:GetBestReclaimCell(representative, lookForEnergy)
+-- 	self:UpdateMap()
+-- 	local rpos = representative:GetPosition()
+-- 	local rname = representative:Name()
+-- 	local best
+-- 	local bestDist = 99999
+-- 	local bestVulnerable
+-- 	for i, cell in pairs(self.cellList) do
+-- 		local value, threat, gas = self:CellValueThreat(rname, cell)
+-- 		if threat == 0 and cell.pos then
+-- 			local canGo = self.ai.maphst:UnitCanGoHere(representative, cell.pos)
+-- 			if not canGo then
+-- 				self:EchoDebug("can't get to reclaim cell, trying nearby")
+-- 				-- check nearby positions, because sometimes the commander is underwater in a crater but can still be reclaimed
+-- 				for angle = halfPi, twicePi, halfPi do
+-- 					local nearPos = self.ai.tool:RandomAway( cell.pos, 110, nil, angle)
+-- 					canGo = self.ai.maphst:UnitCanGoHere(representative, nearPos)
+-- 					if canGo then
+-- 						self:EchoDebug("found accessible position near reclaim cell")
+-- 						break
+-- 					end
+-- 				end
+-- 			end
+-- 			if canGo then
+-- 				local mod = 0
+-- 				if #cell.reclaimables > 0 then
+-- 					if lookForEnergy then
+-- 						mod = cell.energy
+-- 					else
+-- 						mod = cell.metal
+-- 					end
+-- 				end
+-- 				local vulnerable = CellVulnerable(cell, gas, representative.canReclaimGAS)
+-- 				if vulnerable then mod = mod + vulnerableReclaimDistMod end
+-- 				if mod > 0 then
+-- 					local dist = self.ai.tool:Distance(rpos, cell.pos) - (mod * reclaimModMult)
+-- 					if dist < bestDist then
+-- 						best = cell
+-- 						bestDist = dist
+-- 						bestVulnerable = vulnerable
+-- 					end
+-- 				end
+-- 			end
+-- 		end
+-- 	end
+-- 	return best, bestVulnerable
+-- end
+
+-- function TargetHST:WreckToResurrect(representative, alsoDamagedUnits)
+-- 	if not representative then return end
+-- 	self:UpdateMap()
+-- 	local rpos = representative:GetPosition()
+-- 	local rname = representative:Name()
+-- 	local best
+-- 	local bestDist = 99999
+-- 	for i, cell in pairs(self.cellList) do
+-- 		if #cell.resurrectables ~= 0 or (alsoDamagedUnits and cell.damagedUnits and #cell.damagedUnits > 0) then
+-- 			local value, threat, gas = self:CellValueThreat(rname, cell)
+-- 			if threat == 0 and cell.pos then
+-- 				if self.ai.maphst:UnitCanGoHere(representative, cell.pos) then
+-- 					local dist = self.ai.tool:Distance(rpos, cell.pos)
+-- 					if dist < bestDist then
+-- 						best = cell
+-- 						bestDist = dist
+-- 					end
+-- 				end
+-- 			end
+-- 		end
+-- 	end
+-- 	if best then
+-- 		self:EchoDebug("got wreck to resurrect")
+-- 		if alsoDamagedUnits and best.damagedUnits and #best.damagedUnits > 0 then
+-- 			local bestUnit
+-- 			local bestHealth
+-- 			local damaged = best.damagedUnits
+-- 			for i = 1, #damaged do
+-- 				local engUnit = damaged[i]
+-- 				local health = engUnit:GetHealth() / engUnit:GetMaxHealth()
+-- 				if not bestHealth or health < bestHealth then
+-- 					bestHealth = health
+-- 					bestUnit = engUnit
+-- 				end
+-- 			end
+-- 			if bestUnit then
+-- 				return bestUnit, best
+-- 			end
+-- 		end
+-- 		local bestWreck
+-- 		local bestMetalCost = 0
+-- 		for i, w in pairs(best.resurrectables) do
+-- 			if w ~= nil then
+-- 				local wname = w.featureName
+-- 				if wname ~= nil then
+-- 					local ft = self.ai.armyhst.featureTable[wname]
+-- 					if ft ~= nil then
+-- 						local ut = self.ai.armyhst.unitTable[ft.unitName]
+-- 						if ut ~= nil then
+-- 							local metalCost = ut.metalCost
+-- 							if metalCost > bestMetalCost then
+-- 								bestWreck = w
+-- 								bestMetalCost = metalCost
+-- 							end
+-- 						end
+-- 					end
+-- 				end
+-- 			end
+-- 		end
+-- 		return bestWreck, best
+-- 	else
+-- 		return nil, self:NearestVulnerableCell(representative)
+-- 	end
+-- end
+-- function TargetHST:UpdateWrecks()
+-- 	-- figure out where all the wrecks are
+-- 	for id, w in pairs(self.ai.knownWrecks) do
+-- 		-- will need to check if reclaimer can get to wreck later
+-- 		local pos = w.position
+-- 		local cell = self:GetOrCreateCellHere(pos)
+-- 		local wname = w.featureName
+-- 		local ftable = self.ai.armyhst.featureTable[wname]
+-- 		if ftable ~= nil then
+-- 			cell.metal = cell.metal + ftable.metal
+-- 			cell.energy = cell.energy + ftable.energy
+-- 			local unitName = ftable.unitName
+-- 			if unitName ~= nil then
+-- 				w.unitName = unitName
+-- 				local rut = self.ai.armyhst.unitTable[unitName]
+-- 				if not self.ai.armyhst.commanderList[unitName] and rut.speed > 0 and rut.metalCost < 2000 then
+-- 					table.insert(cell.resurrectables, w)
+-- 				end
+-- 			end
+-- 			if ftable.metal > 0 then
+-- 				table.insert(cell.reclaimables, w)
+-- 			end
+-- 		else
+-- 			for findString, metalValue in pairs(self.ai.armyhst.baseFeatureMetal) do
+-- 				if string.find(wname, findString, nil, true) then
+-- 					cell.metal = cell.metal + metalValue
+-- 					break
+-- 				end
+-- 			end
+-- 			if metalValue > 0 then
+-- 				table.insert(cell.reclaimables, w)
+-- 			end
+-- 		end
+-- 	end
+-- end
