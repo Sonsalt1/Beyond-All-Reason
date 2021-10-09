@@ -22,7 +22,7 @@ return {
 		idleautoheal = 5,
 		idletime = 1800,
 		mass = 200000,
-		maxdamage = 133700,
+		maxdamage = 90700,
 		maxslope = 17,
 		maxvelocity = 1.12,
 		maxwaterdepth = 12,
@@ -152,7 +152,7 @@ return {
 					light_mult = "0.03",
 				},
 				damage = {
-					default = 165,
+					default = 265,
 					subs = 5,
 				},
 			},
@@ -196,7 +196,7 @@ return {
 				},
 				damage = {
 					commanders = 1200,
-					default = 5500,
+					default = 7500,
 					subs = 5,
 					vtol = 2750,
 				},
@@ -235,7 +235,7 @@ return {
 				texture3 = "null",
 				tolerance = 9000,
 				tracks = true,
-				turnrate = 15000,
+				turnrate = 1500,
 				weaponacceleration = 230,
 				weapontimer = 1,
 				weapontype = "StarburstLauncher",
@@ -251,7 +251,7 @@ return {
 					light_radius_mult = 1.2,
 				},
 				damage = {
-					default = 800,
+					default = 2000,
 					subs = 5,
 				},
 			},
@@ -289,7 +289,7 @@ return {
 					nofire = true,
 				},
 				damage = {
-					default = 150,
+					default = 200,
 				},
 			},
 		},

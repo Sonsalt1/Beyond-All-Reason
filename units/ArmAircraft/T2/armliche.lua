@@ -13,7 +13,7 @@ return {
 		canmove = true,
 		category = "ALL WEAPON NOTSUB VTOL NOTHOVER",
 		collide = true,
-		cruisealt = 150,
+		cruisealt = 300,
 		description = Spring.I18N('units.descriptions.armliche'),
 		energyuse = 40,
 		explodeas = "hugeexplosiongeneric",

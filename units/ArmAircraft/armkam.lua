@@ -79,7 +79,7 @@ return {
 		},
 		weapondefs = {
 			med_emg = {
-				accuracy = 13,
+				accuracy = 15,
 				areaofeffect = 16,
 				avoidfeature = false,
 				burst = 5,
@@ -122,7 +122,7 @@ return {
 				damage = {
 					bombers = 1,
 					commanders = 5,
-					default = 11,
+					default = 20,
 					fighters = 1,
 					vtol = 1,
 				},

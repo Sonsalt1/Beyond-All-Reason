@@ -202,11 +202,11 @@ return {
 				texture3 = "null",
 				tolerance = 9000,
 				tracks = true,
-				turnrate = 15000,
+				turnrate = 1500,
 				weaponacceleration = 200,
 				weapontimer = 1,
 				weapontype = "StarburstLauncher",
-				weaponvelocity = 2000,
+				weaponvelocity = 1500,
 				customparams = {
 					expl_light_color = "1 0.65 0.05",
 					expl_light_heat_radius_mult = 1.5,
@@ -218,7 +218,7 @@ return {
 					light_radius_mult = 1.05,
 				},
 				damage = {
-					default = 900,
+					default = 1500,
 					subs = 500,
 				},
 			},

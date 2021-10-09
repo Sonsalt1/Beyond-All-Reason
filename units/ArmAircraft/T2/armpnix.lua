@@ -13,7 +13,7 @@ return {
 		canmove = true,
 		category = "ALL NOTLAND MOBILE WEAPON NOTSUB VTOL NOTSHIP NOTHOVER",
 		collide = true,
-		cruisealt = 220,
+		cruisealt = 250,
 		description = Spring.I18N('units.descriptions.armpnix'),
 		explodeas = "largeexplosiongeneric",
 		footprintx = 3,
@@ -118,7 +118,7 @@ return {
 				},
 				damage = {
 					bombers = 53,
-					default = 266,
+					default = 566,
 					subs = 5,
 				},
 			},

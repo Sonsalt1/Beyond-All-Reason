@@ -107,7 +107,7 @@ return {
 				damage = {
 					bombers = 2,
 					commanders = 8,
-					default = 16,
+					default = 35,
 					fighters = 2,
 					vtol = 2,
 				},

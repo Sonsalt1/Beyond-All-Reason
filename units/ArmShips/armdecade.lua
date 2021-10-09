@@ -119,6 +119,7 @@ return {
 		},
 		weapondefs = {
 			emg = {
+				accuracy = 10,
 				areaofeffect = 8,
 				avoidfeature = false,
 				burst = 3,
@@ -146,11 +147,11 @@ return {
 				weapontype = "Cannon",
 				weaponvelocity = 500,
 				damage = {
-					bombers = 3,
+					bombers = 6,
 					default = 9,
-					fighters = 3,
+					fighters = 6,
 					--subs = 3,
-					vtol = 3,
+					vtol = 6,
 				},
 			},
 		},

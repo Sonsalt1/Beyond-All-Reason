@@ -122,6 +122,7 @@ return {
 		},
 		weapondefs = {
 			bfido = {
+				accuracy = 4,
 				areaofeffect = 72,
 				avoidfeature = false,
 				craterareaofeffect = 72,
@@ -134,7 +135,7 @@ return {
 				impulsefactor = 0.123,
 				name = "Ballistic g2g AoE plasma cannon",
 				noselfdamage = true,
-				range = 650,
+				range = 750,
 				reloadtime = 3.16667,
 				soundhit = "xplomed2",
 				soundhitwet = "splssml",
@@ -144,7 +145,7 @@ return {
 				weaponvelocity = 291.63333,
 				damage = {
 					bombers = 35,
-					default = 255,
+					default = 275,
 					fighters = 35,
 					vtol = 35,
 				},

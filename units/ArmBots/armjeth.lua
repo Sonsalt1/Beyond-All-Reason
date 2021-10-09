@@ -154,7 +154,7 @@ return {
 				texture2 = "smoketrailaa",
 				tolerance = 9000,
 				tracks = true,
-				turnrate = 63000,
+				turnrate = 630,
 				turret = true,
 				weaponacceleration = 141,
 				weapontimer = 5,

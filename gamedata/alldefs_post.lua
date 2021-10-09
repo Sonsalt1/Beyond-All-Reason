@@ -147,6 +147,13 @@ function UnitDef_Post(name, uDef)
 			uDef.buildoptions[numBuildoptions+1] = "freefusion"
 		end
 	end
+	
+	-- Reduced 20% HP of all units and buildings above 200HP
+	PrebakeUnitDefs(
+	if uDef.maxdamage and  uDef.maxdamage > 200 then
+    uDef.maxdamage = uDef.maxdamage*0.8
+	end
+	)
 
 	-- Unit Restrictions
 	if uDef.customparams then

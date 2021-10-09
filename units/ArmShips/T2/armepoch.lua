@@ -129,7 +129,7 @@ return {
 		},
 		weapondefs = {
 			flak = {
-				accuracy = 1000,
+				accuracy = 10,
 				areaofeffect = 128,
 				avoidfeature = false,
 				burnblow = true,

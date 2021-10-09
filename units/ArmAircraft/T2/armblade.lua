@@ -97,7 +97,7 @@ return {
 				name = "Heavy a2g armor-piercing sabot missile launcher",
 				noselfdamage = true,
 				range = 420,
-				reloadtime = 2.26667,
+				reloadtime = 4.26667,
 				smoketrail = true,
 				smokePeriod = 6,
 				smoketime = 12,
@@ -128,7 +128,7 @@ return {
 				},
 				damage = {
 					commanders = 95,
-					default = 190,
+					default = 400,
 				},
 			},
 		},

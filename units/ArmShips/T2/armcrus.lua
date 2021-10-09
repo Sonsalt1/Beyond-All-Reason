@@ -158,6 +158,7 @@ return {
 				},
 			},
 			gauss = {
+				accuracy = 10,
 				areaofeffect = 16,
 				avoidfeature = false,
 				craterareaofeffect = 0,

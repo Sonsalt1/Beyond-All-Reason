@@ -117,7 +117,7 @@ return {
 		},
 		weapondefs = {
 			cor_mort = {
-				accuracy = 100,
+				accuracy = 15,
 				areaofeffect = 36,
 				avoidfeature = false,
 				avoidfriendly = true,
@@ -133,7 +133,7 @@ return {
 				--model = "artshell-small.s3o",
 				name = "PlasmaCannon",
 				noselfdamage = true,
-				range = 850,
+				range = 870,
 				reloadtime = 1.6,
 				soundhit = "xplomed3",
 				soundhitwet = "splshbig",
@@ -147,7 +147,7 @@ return {
 				},
 				damage = {
 					bombers = 14,
-					default = 105,
+					default = 115,
 					fighters = 14,
 					subs = 5,
 					vtol = 14,

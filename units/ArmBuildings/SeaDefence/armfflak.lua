@@ -98,7 +98,7 @@ return {
 		},
 		weapondefs = {
 			armflak_gun = {
-				accuracy = 1000,
+				accuracy = 10,
 				areaofeffect = 192,
 				avoidfeature = false,
 				avoidfriendly = false,
