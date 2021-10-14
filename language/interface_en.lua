@@ -1,6 +1,7 @@
 return {
 	en = {
 		ui = {
+			forceResignMessage = "You have been force-resigned: Self-destructing all your units is considered unwanted behavior.",
 			topbar = {
 				button = {
 					quit = 'Quit',
@@ -507,6 +508,7 @@ return {
 			},
 			chickens = {
 				queenIsAngry = 'The Queen is angered!',
+				queenResistant = "The Queen is becoming resistant to %{unit} attacks!",
 				wave = 'Wave %{waveNumber}',
 				waveCount = '%{count} Chickens!',
 				chickenCount = 'Chickens: %{count}',
